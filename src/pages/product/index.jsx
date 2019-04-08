@@ -1,25 +1,41 @@
 import React, { Component,Fragment } from 'react';
-import { Card, Table,Select,Button,Input,Icon} from 'antd';
+import { Card, Table,Select,Button,Input,Icon,message} from 'antd';
 
 import MyButton from '$comp/my-button';
-
+import { reqGetProducts } from '$api'
 const Option = Select.Option;
 
 export default class Product extends Component {
+    state= {
+      products:[],//单页产品数据数组
+        total: 0 ,// 产品的总数量
+    }
+
+
+
+
+    getProducts = async (pageNum,pageSize = 3) => {
+      const result = await reqGetProducts(pageNum, pageSize);
+
+      if (result.status=== 0 ) {
+        this.setState({
+            products:result.data.list,
+            total:result.data.total
+        })
+      }else {
+        message.error(result.msg);
+      }
+
+  }
+
+
+  componentDidMount() {
+      this.getProducts(1);
+  }
+
+
   render() {
-      const dataSource = [
-          {
-              key: '1',
-              name: '胡彦斌',
-              age: 32,
-              address: '西湖区湖底公园1号'
-          }, {
-              key: '2',
-              name: '胡彦祖',
-              age: 42,
-              address: '西湖区湖底公园1号'
-          }
-      ];
+     const { products,total } = this.state;
 
       const columns = [
           {
@@ -28,12 +44,12 @@ export default class Product extends Component {
               key: 'name',
           }, {
               title: '商品描述',
-              dataIndex: 'age',
-              key: 'age',
+              dataIndex: 'desc',
+              key: 'desc',
           }, {
               title: '价格',
-              dataIndex: 'address',
-              key: 'address',
+              dataIndex: 'price',
+              key: 'price',
           },
           {
               title: '状态',
@@ -75,7 +91,7 @@ export default class Product extends Component {
         style={{width:'100%'}}
         >
         <Table
-            dataSource={dataSource}
+            dataSource={products}
             columns={columns}
             bordered
             pagination={{
@@ -83,6 +99,9 @@ export default class Product extends Component {
                 pageSizeOptions: ['3', '6', '9', '12'],
                 defaultPageSize: 3,
                 showQuickJumper: true,
+                total,
+                onChange: this.getProducts,
+                onShowSizeChange: this.getProducts
             }}
             loading={false}
         >
